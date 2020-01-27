@@ -1,60 +1,150 @@
-<template>
-  <div id="app">
-    <img src="./assets/logo.png">
-    <h1>{{ msg }}</h1>
-    <h2>Essential Links</h2>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank">Twitter</a></li>
-    </ul>
-    <h2>Ecosystem</h2>
-    <ul>
-      <li><a href="http://router.vuejs.org/" target="_blank">vue-router</a></li>
-      <li><a href="http://vuex.vuejs.org/" target="_blank">vuex</a></li>
-      <li><a href="http://vue-loader.vuejs.org/" target="_blank">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank">awesome-vue</a></li>
-    </ul>
-  </div>
+<template id="app">
+  <section>
+    <h1>Make beer</h1>
+    <div v-if="beers.length === 0" class="loading">Loading ...</div>
+    <div v-for="beer in beers" :key="beer.id" class="beer-contain">
+      <div class="beer-img">
+        <img :src="beer.img" alt="Beer image" height="350" />
+      </div>
+      <div class="beer-info">
+        <h2>{{beer.name}}</h2>
+        <p class="bright">{{beer.tagline}}</p>
+        <p>
+          <span class="bright">Description:</span>
+          {{beer.desc}}
+        </p>
+        <p>
+          <span class="bright">Tips:</span>
+          {{beer.tips}}
+        </p>
+        <h3 class="bright">Food pairings</h3>
+        <ul>
+          <li v-for="(item, idx ) in beer" :key="idx">{{ item}}</li>
+        </ul>
+      </div>
+    </div>
+  </section>
 </template>
 
 <script>
+import axios from "axios";
 export default {
-  name: 'app',
-  data () {
+  data() {
     return {
-      msg: 'Welcome to Your Vue.js App'
+      bottom: false,
+      beers: []
+    };
+  },
+  watch: {
+    bottom(bottom) {
+      if (bottom) {
+        this.addBeer();
+      }
+    }
+  },
+  created() {
+    window.addEventListener("scroll", () => {
+      this.bottom = this.bottomVisible();
+    });
+    this.addBeer();
+  },
+  methods: {
+    bottomVisible() {
+      const scrollY = window.scrollY;
+      const visible = document.documentElement.clientHeight;
+      const pageHeight = document.documentElement.scrollHeight;
+      const bottomOfPage = visible + scrollY >= pageHeight;
+      return bottomOfPage || pageHeight < visible;
+    },
+    addBeer() {
+      axios.get("https://api.punkapi.com/v2/beers/random").then(response => {
+        let api = response.data[0];
+        let apiInfo = {
+          name: api.name,
+          desc: api.description,
+          img: api.image_url,
+          tips: api.brewers_tips,
+          tagLine: api.tagLine,
+          food: api.food_pairing
+        };
+        this.beers.push(apiInfo);
+        if (this.bottomVisible()) {
+          this.addBeer();
+        }
+      });
     }
   }
-}
+};
 </script>
 
 <style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+body {
+  font-family: "Archivo Narrow", sans-serif;
+  background: #25859a;
 }
 
-h1, h2 {
-  font-weight: normal;
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Fjalla One", sans-serif;
+}
+
+h1 {
+  margin-top: 40px;
+  color: white;
+  text-align: center;
+}
+
+.loading {
+  color: white;
+  text-align: center;
+  font-size: 20px;
+}
+
+.display,
+#app,
+.beer-contain,
+.beer-img {
+  display: flex;
+  justify-content: center;
+  align-content: center;
+}
+
+#app {
+  flex-direction: column;
+}
+
+.beer-contain {
+  width: 50%;
+  margin: 20px 24%;
+  box-shadow: 0 2px 3px 1px rgba(30, 0, 0, 0.1);
+}
+
+.beer-img {
+  padding: 30px;
+  background: #ff6542;
+  border: 1px solid #88498f;
+  border-right: 1px solid #f44822;
+}
+
+.beer-info {
+  background: #564154;
+  color: white;
+  padding: 30px;
+  border: 1px solid #88498f;
+}
+
+.beer-info .bright {
+  color: #fcd7cf;
+  font-family: "Contrail One", sans-serif;
+}
+
+h3 {
+  margin-bottom: 5px;
 }
 
 ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-
-a {
-  color: #42b983;
+  margin-top: 5px;
 }
 </style>
